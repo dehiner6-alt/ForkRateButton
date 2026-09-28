@@ -56,10 +56,10 @@ void CustomCPPopup::onSend(CCObject*) {
     std::string serverURL = Mod::get()->getSettingValue<std::string>("server") + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
     std::string password = Mod::get()->getSettingValue<std::string>("password");
 
-    // Quitamos Mod::get() de aquí dentro, ya que solo pide (url, callback)
+    // Usamos la estructura: .post(url, mod, callback)
     web::WebRequest()
         .header("Authorization", password)
-        .post(serverURL, [this](web::WebResponse* response) {
+        .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
                 this->removeFromParentAndCleanup(true);
