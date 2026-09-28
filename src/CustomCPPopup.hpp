@@ -3,12 +3,12 @@
 
 using namespace geode::prelude;
 
-class CustomCPPopup : public Popup<int> {
+class CustomCPPopup : public FLAlertLayer {
 protected:
     int m_levelID;
     TextInput* m_inputField;
 
-    bool setup(int levelID) override;
+    bool init(int levelID);
     void onSend(CCObject*);
 
 public:
