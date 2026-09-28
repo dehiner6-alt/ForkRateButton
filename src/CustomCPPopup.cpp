@@ -15,8 +15,8 @@ protected:
         // Campo de texto para los CPs
         m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
         m_inputField->setFilter("0123456789-");
-        m_inputField->setPosition(m_size / 2);
-        m_layer->addChild(m_inputField);
+        m_inputField->setPosition(m_size / 2 / m_mainLayer->getScale());
+        m_mainLayer->addChild(m_inputField);
 
         // Botón de enviar
         auto submitBtn = CCMenuItemSpriteExtra::create(
@@ -28,7 +28,7 @@ protected:
         auto menu = CCMenu::create();
         menu->addChild(submitBtn);
         menu->setPosition({0, 0});
-        m_layer->addChild(menu);
+        m_mainLayer->addChild(menu);
 
         return true;
     }
@@ -56,7 +56,7 @@ protected:
 public:
     static CustomCPPopup* create(int levelID) {
         auto ret = new CustomCPPopup();
-        if (ret && ret->initAnchored(320.f, 200.f, levelID)) {
+        if (ret && ret->init(320.f, 200.f, levelID)) {
             ret->autorelease();
             return ret;
         }
