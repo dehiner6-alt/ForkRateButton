@@ -59,14 +59,18 @@ void CustomCPPopup::onSend(CCObject*) {
     auto req = web::WebRequest();
     req.header("Authorization", password);
 
-    // Configuramos el listener para la tarea web
-    m_listener.bind([this](web::WebTask::Event* event) {
-        if (auto response = event->getValue()) {
-            if (response->ok()) {
-                FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                this->removeFromParentAndCleanup(true);
+    // Usamos Task<web::WebResponse> para el listener
+    m_listener.bind([this](Task<web::WebResponse>::Event* event) {
+        if (event->isFinished()) {
+            if (auto response = event->getValue()) {
+                if (response->ok()) {
+                    FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
+                    this->removeFromParentAndCleanup(true);
+                } else {
+                    FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
+                }
             } else {
-                FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
+                FLAlertLayer::create("Error", "Error de red con el servidor.", "OK")->show();
             }
         }
     });
