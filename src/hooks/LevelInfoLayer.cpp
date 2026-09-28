@@ -4,11 +4,13 @@
 #include "../managers/SessionManager.hpp"
 #include "../utils/Utils.hpp"
 
-// Declaramos tu popup personalizado por si está en otro archivo
-class CustomCPPopup : public geode::prelude::Popup<int> {
-public:
-    static CustomCPPopup* create(int levelID);
-};
+// Declaración limpia del popup externo
+namespace geode::prelude {
+    class CustomCPPopup : public Popup<int> {
+    public:
+        static CustomCPPopup* create(int levelID);
+    };
+}
 
 using namespace geode::prelude;
 
@@ -32,9 +34,9 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
 
             leftMenu->addChild(devRateButton);
 
-            // 2. Tu botón de CPs personalizados con el icono de creador oficial
+            // 2. Tu botón de CPs personalizados con el método correcto de CircleButtonSprite
             auto *customCPButton = CCMenuItemSpriteExtra::create(
-                CircleButtonSprite::createWithSpriteName("GJ_creatorIcon_001.png", 1.0f, CircleBaseColor::Green),
+                CircleButtonSprite::create("GJ_creatorIcon_001.png", CircleBaseColor::Green),
                 this,
                 menu_selector(MyLevelInfoLayer::onCustomCPButton)
             );
@@ -42,7 +44,7 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
 
             leftMenu->addChild(customCPButton);
 
-            // Actualizamos la posición de los botones en el menú lateral
+            // Actualizamos la posición en el menú lateral
             leftMenu->updateLayout();
         }
         
@@ -71,7 +73,6 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
         }
     }
 
-    // La función que abre tu ventana de CPs personalizados
     void onCustomCPButton(CCObject *) {
         int levelID = static_cast<int>(m_level->m_levelID);
         CustomCPPopup::create(levelID)->show();
