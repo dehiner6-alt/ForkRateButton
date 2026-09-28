@@ -1,66 +1,64 @@
-#include <Geode/Geode.hpp>
-#include <Geode/ui/TextInput.hpp>
+#include "CustomCPPopup.hpp"
+#include "managers/SessionManager.hpp"
+#include "utils/Utils.hpp"
 
-using namespace geode::prelude;
+bool CustomCPPopup::setup(int levelID) {
+    m_levelID = levelID;
+    
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    
+    auto title = CCLabelBMFont::create("Dar CPs Personalizados", "goldFont.fnt");
+    title->setPosition({winSize.width / 2, winSize.height / 2 + 60.f});
+    title->setScale(0.8f);
+    this->m_mainLayer->addChild(title);
 
-class CustomCPPopup : public Popup<int> {
-protected:
-    TextInput* m_inputField;
-    int m_levelID;
+    m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
+    m_inputField->setAllowedChars("0123456789");
+    m_inputField->setPosition({winSize.width / 2, winSize.height / 2 + 10.f});
+    this->m_mainLayer->addChild(m_inputField);
 
-    bool setup(int levelID) override {
-        m_levelID = levelID;
-        this->setTitle("Dar CPs Personalizados");
+    auto submitBtn = CCMenuItemSpriteExtra::create(
+        ButtonSprite::create("Enviar", 100, true, "goldFont.fnt", "goldBtn_01.png", 30.f, 0.8f),
+        this,
+        menu_selector(CustomCPPopup::onSend)
+    );
+    
+    auto menu = CCMenu::create();
+    menu->addChild(submitBtn);
+    menu->setPosition({winSize.width / 2, winSize.height / 2 - 45.f});
+    this->m_mainLayer->addChild(menu);
 
-        // Campo de texto para los CPs
-        m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
-        m_inputField->setFilter("0123456789-");
-        m_inputField->setPosition(m_size / 2);
-        m_mainLayer->addChild(m_inputField);
+    return true;
+}
 
-        // Botón de enviar
-        auto submitBtn = CCMenuItemSpriteExtra::create(
-            ButtonSprite::create("Enviar", "goldBtn_01.png", 0.8f),
-            this, menu_selector(CustomCPPopup::onSubmit)
-        );
-        submitBtn->setPosition({m_size.width / 2, 45.f});
-
-        auto menu = CCMenu::create();
-        menu->addChild(submitBtn);
-        menu->setPosition({0, 0});
-        m_mainLayer->addChild(menu);
-
-        return true;
+void CustomCPPopup::onSend(CCObject*) {
+    std::string text = m_inputField->getString();
+    if (text.empty()) {
+        FLAlertLayer::create("Error", "Por favor ingresa una cantidad de CPs.", "OK")->show();
+        return;
     }
 
-    void onSubmit(CCObject*) {
-        std::string cpValue = m_inputField->getString();
-        if (cpValue.empty()) return;
+    int amount = std::stoi(text);
+    std::string serverURL = SessionManager::getServerURL() + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
 
-        std::string serverURL = "https://choyhomero.ps.fhgdps.com/database/setCustomCP.php";
-        std::string payload = fmt::format("levelID={}&cp={}", m_levelID, cpValue);
+    web::WebRequest()
+        .header("Authorization", SessionManager::getPassword())
+        .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
+            if (response->ok()) {
+                FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
+                this->onClose(nullptr);
+            } else {
+                FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
+            }
+        });
+}
 
-        // Petición web estándar compatible con todas las versiones de Geode
-        web::WebRequest()
-            .bodyString(payload)
-            .post(serverURL, [=](web::WebResponse* response) {
-                if (response->ok()) {
-                    FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                    this->removeFromParent();
-                } else {
-                    FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
-                }
-            });
+CustomCPPopup* CustomCPPopup::create(int levelID) {
+    auto ret = new CustomCPPopup();
+    if (ret && ret->initAnchored(320.f, 200.f, levelID)) {
+        ret->autorelease();
+        return ret;
     }
-
-public:
-    static CustomCPPopup* create(int levelID) {
-        auto ret = new CustomCPPopup();
-        if (ret && ret->init(320.f, 200.f, levelID)) {
-            ret->autorelease();
-            return ret;
-        }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
-    }
-};
+    CC_SAFE_DELETE(ret);
+    return nullptr;
+}
