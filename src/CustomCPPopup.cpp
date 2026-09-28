@@ -1,9 +1,10 @@
 #include "CustomCPPopup.hpp"
-#include "managers/SessionManager.hpp"
+#include "managers/SettingsManager.hpp"
 #include "utils/Utils.hpp"
 
 bool CustomCPPopup::init(int levelID) {
-    if (!FLAlertLayer::init(350.f, 200.f))
+    // FLAlertLayer usa opacidad en su init, por ejemplo 150
+    if (!FLAlertLayer::init(150))
         return false;
 
     m_levelID = levelID;
@@ -53,10 +54,12 @@ void CustomCPPopup::onSend(CCObject*) {
     }
 
     int amount = std::stoi(text);
-    std::string serverURL = SessionManager::getServerURL() + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
+    
+    // Usamos SettingsManager tal como lo hace el resto de tu mod
+    std::string serverURL = SettingsManager::getServerURL() + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
 
     web::WebRequest()
-        .header("Authorization", SessionManager::getPassword())
+        .header("Authorization", SettingsManager::getPassword())
         .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
