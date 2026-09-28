@@ -56,17 +56,16 @@ void CustomCPPopup::onSend(CCObject*) {
     std::string serverURL = Mod::get()->getSettingValue<std::string>("server") + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
     std::string password = Mod::get()->getSettingValue<std::string>("password");
 
-    // Usamos la estructura: .post(url, mod, callback)
-    web::WebRequest()
-        .header("Authorization", password)
-        .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
-            if (response->ok()) {
-                FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                this->removeFromParentAndCleanup(true);
-            } else {
-                FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
-            }
-        });
+    auto req = web::WebRequest();
+    req.header("Authorization", password);
+    req.post(serverURL, [this](web::WebResponse* response) {
+        if (response->ok()) {
+            FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
+            this->removeFromParentAndCleanup(true);
+        } else {
+            FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
+        }
+    });
 }
 
 CustomCPPopup* CustomCPPopup::create(int levelID) {
