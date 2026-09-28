@@ -15,7 +15,7 @@ protected:
         // Campo de texto para los CPs
         m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
         m_inputField->setFilter("0123456789-");
-        m_inputField->setPosition(m_size / 2 / m_mainLayer->getScale());
+        m_inputField->setPosition(m_size / 2);
         m_mainLayer->addChild(m_inputField);
 
         // Botón de enviar
@@ -37,16 +37,20 @@ protected:
         std::string cpValue = m_inputField->getString();
         if (cpValue.empty()) return;
 
-        // URL apuntando a tu FHGDPS
         std::string serverURL = "https://choyhomero.ps.fhgdps.com/database/setCustomCP.php";
         std::string payload = fmt::format("levelID={}&cp={}", m_levelID, cpValue);
 
+        // Capturamos una referencia segura para cerrar la ventana después
+        auto weakSelf = Ref(this);
+
         web::WebRequest()
             .body(payload)
-            .post(serverURL, [=](web::WebResponse* response) {
+            .post(serverURL, [weakSelf, cpValue](web::WebResponse* response) {
                 if (response->ok()) {
                     FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                    this->onClose(nullptr);
+                    if (weakSelf) {
+                        weakSelf->removeFromParent();
+                    }
                 } else {
                     FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
                 }
@@ -56,7 +60,7 @@ protected:
 public:
     static CustomCPPopup* create(int levelID) {
         auto ret = new CustomCPPopup();
-        if (ret && ret->init(320.f, 200.f, levelID)) {
+        if (ret && ret->initAnchored(320.f, 200.f, levelID)) {
             ret->autorelease();
             return ret;
         }
