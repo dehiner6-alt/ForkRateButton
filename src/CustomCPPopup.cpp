@@ -56,18 +56,22 @@ void CustomCPPopup::onSend(CCObject*) {
     std::string serverURL = Mod::get()->getSettingValue<std::string>("server") + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
     std::string password = Mod::get()->getSettingValue<std::string>("password");
 
-    // Usamos .listen() en lugar de .then() para manejar la respuesta del WebFuture
-    web::WebRequest()
-        .header("Authorization", password)
-        .post(serverURL)
-        .listen([this](web::WebResponse* response) {
+    auto req = web::WebRequest();
+    req.header("Authorization", password);
+
+    // Configuramos el listener para la tarea web
+    m_listener.bind([this](web::WebTask::Event* event) {
+        if (auto response = event->getValue()) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
                 this->removeFromParentAndCleanup(true);
             } else {
                 FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
             }
-        });
+        }
+    });
+
+    m_listener.setFilter(req.post(serverURL));
 }
 
 CustomCPPopup* CustomCPPopup::create(int levelID) {
