@@ -53,13 +53,13 @@ void CustomCPPopup::onSend(CCObject*) {
 
     int amount = std::stoi(text);
     
-    // Obtenemos la URL y la contraseña directamente de los ajustes de Geode
     std::string serverURL = Mod::get()->getSettingValue<std::string>("server") + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
     std::string password = Mod::get()->getSettingValue<std::string>("password");
 
+    // Quitamos Mod::get() de aquí dentro, ya que solo pide (url, callback)
     web::WebRequest()
         .header("Authorization", password)
-        .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
+        .post(serverURL, [this](web::WebResponse* response) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
                 this->removeFromParentAndCleanup(true);
