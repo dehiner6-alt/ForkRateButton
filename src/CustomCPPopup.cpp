@@ -2,26 +2,17 @@
 #include "managers/SessionManager.hpp"
 #include "utils/Utils.hpp"
 
-bool CustomCPPopup::init(int levelID) {
-    if (!FLAlertLayer::init(350.f, 200.f))
-        return false;
-
+bool CustomCPPopup::setup(int levelID) {
     m_levelID = levelID;
     
-    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    auto winSize = m_size;
     
-    auto background = CCScale9Sprite::create("GJ_square01.png", {0, 0, 80, 80}, {10, 10, 60, 60});
-    background->setContentSize({320.f, 200.f});
-    background->setPosition(winSize.width / 2, winSize.height / 2);
-    m_mainLayer->addChild(background);
-
     auto title = CCLabelBMFont::create("Dar CPs Personalizados", "goldFont.fnt");
     title->setPosition({winSize.width / 2, winSize.height / 2 + 60.f});
     title->setScale(0.8f);
     m_mainLayer->addChild(title);
 
     m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
-    m_inputField->filter("0123456789");
     m_inputField->setPosition({winSize.width / 2, winSize.height / 2 + 10.f});
     m_mainLayer->addChild(m_inputField);
 
@@ -46,7 +37,17 @@ void CustomCPPopup::onSend(CCObject*) {
         return;
     }
 
+    // Validar que sean solo números
+    for (char c : text) {
+        if (!std::isdigit(c)) {
+            FLAlertLayer::create("Error", "Por favor ingresa un número válido.", "OK")->show();
+            return;
+        }
+    }
+
     int amount = std::stoi(text);
+    
+    // Usamos la misma lógica de URL que el resto del mod
     std::string serverURL = SessionManager::getServerURL() + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
 
     web::WebRequest()
@@ -54,7 +55,7 @@ void CustomCPPopup::onSend(CCObject*) {
         .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                this->removeFromParentAndCleanup(true);
+                this->onClose(nullptr);
             } else {
                 FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
             }
@@ -63,7 +64,7 @@ void CustomCPPopup::onSend(CCObject*) {
 
 CustomCPPopup* CustomCPPopup::create(int levelID) {
     auto ret = new CustomCPPopup();
-    if (ret && ret->init(levelID)) {
+    if (ret && ret->initAnchored(320.f, 200.f, levelID)) {
         ret->autorelease();
         return ret;
     }
