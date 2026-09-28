@@ -1,26 +1,25 @@
 #include "CustomCPPopup.hpp"
 #include "utils/Utils.hpp"
 
-bool CustomCPPopup::init(int levelID) {
-    if (!FLAlertLayer::init(150))
-        return false;
+CustomCPPopup* CustomCPPopup::create(int levelID) {
+    auto ret = new CustomCPPopup();
+    // initAnchored crea la ventana con el tamaño exacto (ancho, alto)
+    if (ret && ret->initAnchored(350.f, 200.f, levelID)) {
+        ret->autorelease();
+        return ret;
+    }
+    CC_SAFE_DELETE(ret);
+    return nullptr;
+}
 
+bool CustomCPPopup::setup(int levelID) {
     m_levelID = levelID;
     
-    auto winSize = CCDirector::sharedDirector()->getWinSize();
-    
-    auto background = CCScale9Sprite::create("GJ_square01.png", {0, 0, 80, 80}, {10, 10, 60, 60});
-    background->setContentSize({320.f, 200.f});
-    background->setPosition(winSize.width / 2, winSize.height / 2);
-    m_mainLayer->addChild(background);
-
-    auto title = CCLabelBMFont::create("Dar CPs Personalizados", "goldFont.fnt");
-    title->setPosition({winSize.width / 2, winSize.height / 2 + 60.f});
-    title->setScale(0.8f);
-    m_mainLayer->addChild(title);
+    // Popup ya crea el fondo y la capa principal automáticamente
+    setTitle("Dar CPs Personalizados");
 
     m_inputField = TextInput::create(150.f, "Cantidad", "chatFont.fnt");
-    m_inputField->setPosition({winSize.width / 2, winSize.height / 2 + 10.f});
+    m_inputField->setPosition({m_size.width / 2, m_size.height / 2 + 10.f});
     m_mainLayer->addChild(m_inputField);
 
     auto submitBtn = CCMenuItemSpriteExtra::create(
@@ -31,7 +30,7 @@ bool CustomCPPopup::init(int levelID) {
     
     auto menu = CCMenu::create();
     menu->addChild(submitBtn);
-    menu->setPosition({winSize.width / 2, winSize.height / 2 - 45.f});
+    menu->setPosition({m_size.width / 2, m_size.height / 2 - 45.f});
     m_mainLayer->addChild(menu);
 
     return true;
@@ -59,13 +58,12 @@ void CustomCPPopup::onSend(CCObject*) {
     auto req = web::WebRequest();
     req.header("Authorization", password);
 
-    // Usamos Task<web::WebResponse> para el listener
     m_listener.bind([this](Task<web::WebResponse>::Event* event) {
         if (event->isFinished()) {
             if (auto response = event->getValue()) {
                 if (response->ok()) {
                     FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                    this->removeFromParentAndCleanup(true);
+                    this->onClose(nullptr); // Cierra el Popup de forma limpia
                 } else {
                     FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
                 }
@@ -76,14 +74,4 @@ void CustomCPPopup::onSend(CCObject*) {
     });
 
     m_listener.setFilter(req.post(serverURL));
-}
-
-CustomCPPopup* CustomCPPopup::create(int levelID) {
-    auto ret = new CustomCPPopup();
-    if (ret && ret->init(levelID)) {
-        ret->autorelease();
-        return ret;
-    }
-    CC_SAFE_DELETE(ret);
-    return nullptr;
 }
