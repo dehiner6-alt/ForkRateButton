@@ -40,17 +40,13 @@ protected:
         std::string serverURL = "https://choyhomero.ps.fhgdps.com/database/setCustomCP.php";
         std::string payload = fmt::format("levelID={}&cp={}", m_levelID, cpValue);
 
-        // Capturamos una referencia segura para cerrar la ventana después
-        auto weakSelf = Ref(this);
-
+        // Petición web estándar compatible con todas las versiones de Geode
         web::WebRequest()
-            .body(payload)
-            .post(serverURL, [weakSelf, cpValue](web::WebResponse* response) {
+            .bodyString(payload)
+            .post(serverURL, [=](web::WebResponse* response) {
                 if (response->ok()) {
                     FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
-                    if (weakSelf) {
-                        weakSelf->removeFromParent();
-                    }
+                    this->removeFromParent();
                 } else {
                     FLAlertLayer::create("Error", "No se pudo conectar con el servidor.", "OK")->show();
                 }
@@ -60,7 +56,7 @@ protected:
 public:
     static CustomCPPopup* create(int levelID) {
         auto ret = new CustomCPPopup();
-        if (ret && ret->initAnchored(320.f, 200.f, levelID)) {
+        if (ret && ret->init(320.f, 200.f, levelID)) {
             ret->autorelease();
             return ret;
         }
