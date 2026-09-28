@@ -1,9 +1,7 @@
 #include "CustomCPPopup.hpp"
-#include "managers/SettingsManager.hpp"
 #include "utils/Utils.hpp"
 
 bool CustomCPPopup::init(int levelID) {
-    // FLAlertLayer usa opacidad en su init, por ejemplo 150
     if (!FLAlertLayer::init(150))
         return false;
 
@@ -55,11 +53,12 @@ void CustomCPPopup::onSend(CCObject*) {
 
     int amount = std::stoi(text);
     
-    // Usamos SettingsManager tal como lo hace el resto de tu mod
-    std::string serverURL = SettingsManager::getServerURL() + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
+    // Obtenemos la URL y la contraseña directamente de los ajustes de Geode
+    std::string serverURL = Mod::get()->getSettingValue<std::string>("server") + "/addcp?levelId=" + std::to_string(m_levelID) + "&cp=" + std::to_string(amount);
+    std::string password = Mod::get()->getSettingValue<std::string>("password");
 
     web::WebRequest()
-        .header("Authorization", SettingsManager::getPassword())
+        .header("Authorization", password)
         .post(serverURL, Mod::get(), [this](web::WebResponse* response) {
             if (response->ok()) {
                 FLAlertLayer::create("Éxito", "¡CPs aplicados al creador!", "OK")->show();
