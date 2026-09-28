@@ -37,8 +37,8 @@ protected:
         std::string cpValue = m_inputField->getString();
         if (cpValue.empty()) return;
 
-        // Cambia esto por la URL real de tu FHGDPS
-        std::string serverURL = "https://tu-gdps.com/database/setCustomCP.php";
+        // URL apuntando a tu FHGDPS
+        std::string serverURL = "https://choyhomero.ps.fhgdps.com/database/setCustomCP.php";
         std::string payload = fmt::format("levelID={}&cp={}", m_levelID, cpValue);
 
         web::WebRequest()
