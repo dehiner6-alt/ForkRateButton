@@ -4,6 +4,12 @@
 #include "../managers/SessionManager.hpp"
 #include "../utils/Utils.hpp"
 
+// Declaramos tu popup personalizado por si está en otro archivo
+class CustomCPPopup : public geode::prelude::Popup<int> {
+public:
+    static CustomCPPopup* create(int levelID);
+};
+
 using namespace geode::prelude;
 
 class $modify(MyLevelInfoLayer, LevelInfoLayer) {
@@ -15,6 +21,7 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
             return true;
 
         if (auto *leftMenu = static_cast<CCMenu *>(this->getChildByID("left-side-menu"))) {
+            // 1. Botón original de Dev Rate
             auto *devRateButton = CCMenuItemSpriteExtra::create(
                 CCSprite::createWithSpriteFrameName("GJ_starBtnMod_001.png"),
                 this,
@@ -24,6 +31,18 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
             devRateButton->setID("dev-rate-button"_spr);
 
             leftMenu->addChild(devRateButton);
+
+            // 2. Tu botón de CPs personalizados con el icono de creador oficial
+            auto *customCPButton = CCMenuItemSpriteExtra::create(
+                CircleButtonSprite::createWithSpriteName("GJ_creatorIcon_001.png", 1.0f, CircleBaseColor::Green),
+                this,
+                menu_selector(MyLevelInfoLayer::onCustomCPButton)
+            );
+            customCPButton->setID("custom-cp-button"_spr);
+
+            leftMenu->addChild(customCPButton);
+
+            // Actualizamos la posición de los botones en el menú lateral
             leftMenu->updateLayout();
         }
         
@@ -50,5 +69,11 @@ class $modify(MyLevelInfoLayer, LevelInfoLayer) {
         } else {
             DevRateStarsPopup::create(m_level->m_levelID)->show();
         }
+    }
+
+    // La función que abre tu ventana de CPs personalizados
+    void onCustomCPButton(CCObject *) {
+        int levelID = static_cast<int>(m_level->m_levelID);
+        CustomCPPopup::create(levelID)->show();
     }
 };
