@@ -1,14 +1,15 @@
 #pragma once
 #include <Geode/Geode.hpp>
+#include <Geode/ui/Popup.hpp>
 
 using namespace geode::prelude;
 
-class CustomCPPopup : public FLAlertLayer {
+class CustomCPPopup : public Popup<int> {
 protected:
     int m_levelID;
     TextInput* m_inputField;
 
-    bool init(int levelID);
+    bool setup(int levelID) override;
     void onSend(CCObject*);
 
 public:
